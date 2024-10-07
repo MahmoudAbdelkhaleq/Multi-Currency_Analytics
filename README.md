@@ -64,3 +64,9 @@ The **Multi-Currency Analytics API** is a powerful tool designed to manage custo
     ```bash
     fastapi dev main.py
     ```
+
+5. **Use the API**:
+   In your browser navigate to 
+   1-http://localhost:8000/docs in order to access the APIs.
+   2-http://localhost:8000/graphql in order to call the server using GraphQL
+    
