@@ -21,7 +21,7 @@ class Query:
             db.close()
     
     @strawberry.field
-    def get_by_id(self, invoice_id: int) -> InvoiceType:
+    def get_invoice_by_id(self, invoice_id: int) -> InvoiceType:
         db = SessionLocal()
         try:
             return InvoiceService.get_invoice(invoice_id = invoice_id, db = db)

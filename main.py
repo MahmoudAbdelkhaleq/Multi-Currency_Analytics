@@ -75,7 +75,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 # Invoice CRUD
 
-@app.post("/users/{user_id}/invoices/", response_model=Invoice)
+@app.post("/invoices/{user_id}/", response_model=Invoice)
 async def create_invoice_for_user(
     user_id: int, invoice: InvoiceCreate, db: Session = Depends(get_db)
 ):
@@ -91,6 +91,13 @@ def read_invoices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 @app.get("/invoices/{invoice_id}", response_model=Invoice)
 def read_invoice(invoice_id: int, db: Session = Depends(get_db)):
     db_invoice = InvoiceService.get_invoice(db = db, invoice_id=invoice_id)
+    if db_invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return db_invoice
+
+@app.get("/invoices/{user_id}", response_model=Invoice)
+def get_invoices_by_user(user_id: int, db: Session = Depends(get_db)):
+    db_invoice = InvoiceService.get_invoices_by_user(db = db, user_id=user_id)
     if db_invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return db_invoice
@@ -123,8 +130,8 @@ async def total_revenue_per_currency(user_id: int,  db: Session = Depends(get_db
     revenue = await RevenueService.get_total_revenue_per_currency(db = db, user_id=user_id)
     return revenue
 
-@app.get("/total_revenue_in_currency/{user_id}/{currency}")
-async def total_revenue_in_currency(user_id: int, currency: Union[str, None] = 'USD', db: Session = Depends(get_db)):
+@app.get("/total_revenue_in_currency/{user_id}/")
+async def total_revenue_in_currency(user_id: int, currency: Union[str, None] = Query(default = 'USD'), db: Session = Depends(get_db)):
     revenue = await RevenueService.get_total_revenue_in_currency(db = db, user_id=user_id, currency = currency)
     return {'revenue': revenue}
 
