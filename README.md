@@ -57,3 +57,10 @@ The **Multi-Currency Analytics API** is a powerful tool designed to manage custo
     docker-compose up
     ```
     nysql instance configuration can be found in the docker-compose file (user, password, ..etc)
+
+5. **Run the server**:
+   Make sure we are in the directory Multi_Currency_Analytics
+   Run the command
+    ```bash
+    fastapi dev main.py
+    ```
