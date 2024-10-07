@@ -1,0 +1,6 @@
+fastapi[standard]==0.113.0
+pydantic==2.8.0
+sqlalchemy==2.0.21
+asyncpg==0.28.0
+httpx==0.25.1
+strawberry-graphql[fastapi]==0.142.1
