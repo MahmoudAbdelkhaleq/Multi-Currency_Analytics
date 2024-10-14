@@ -15,7 +15,7 @@ class UserUpdate(UserCreate):
 class User(UserBase):
     id: int
     is_active: bool
-    invoices: List[Invoice] = []
+    # invoices: List[Invoice] = []
 
     class Config:
         orm_mode = True

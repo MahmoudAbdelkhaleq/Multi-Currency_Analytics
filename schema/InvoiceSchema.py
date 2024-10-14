@@ -13,6 +13,8 @@ class InvoiceBase(BaseModel):
 class InvoiceCreate(InvoiceBase):
     pass
 
+class InvoiceUpdate(InvoiceBase):
+    pass
 
 
 class Invoice(InvoiceBase):

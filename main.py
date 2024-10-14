@@ -9,8 +9,6 @@ import uvicorn
 import sys
 import os
 
-from graphQL.Query import Query as query
-from graphQL.Mutation import Mutation as mutation
 
 # Get the directory of the current file
 current_directory = os.getcwd()
@@ -23,16 +21,16 @@ print("Current directory added to system path:", current_directory)
 from utils import utils
 
 
-from schema.UserSchema import User
-from schema.InvoiceSchema import Invoice
 from database.database import get_db, engine, Base
 from datetime import datetime
 
-from schema.UserSchema import UserCreate, UserUpdate
-from schema.InvoiceSchema import InvoiceCreate
+from schema.UserSchema import UserCreate, UserUpdate, User
+from schema.InvoiceSchema import InvoiceCreate, Invoice
 from service import InvoiceService, UserService, RevenueService
 
 
+from graphQL.Query import Query as query
+from graphQL.Mutation import Mutation as mutation
 
 
 Base.metadata.create_all(bind=engine)
@@ -102,10 +100,11 @@ def get_invoices_by_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Invoice not found")
     return db_invoice
 
-@app.put("/invoices/", response_model=List[Invoice])
-def update_invoice(invoice_id: int, invoice: InvoiceCreate, db: Session = Depends(get_db)):
-    db_invoice = InvoiceService.update_invoice(db = db, invoice_id=invoice_id, invoice=invoice)
+@app.put("/invoices/", response_model=Invoice)
+async def update_invoice(invoice_id: int, invoice: InvoiceCreate, db: Session = Depends(get_db)):
+    db_invoice = await InvoiceService.update_invoice(db = db, invoice_id=invoice_id, invoice=invoice)
     return db_invoice
+ 
 
 @app.delete("/invoices/{invoice_id}", response_model=Invoice)
 def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
