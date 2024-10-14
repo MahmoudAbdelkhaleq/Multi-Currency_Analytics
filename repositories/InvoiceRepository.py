@@ -6,7 +6,9 @@ from datetime import datetime
 
 from database.database import SessionLocal, get_db
 from fastapi import Depends, Query
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_invoices(db: Session, skip: int = 0, limit: int = 20):
     return db.query(Invoice).offset(skip).limit(limit).all()
@@ -22,7 +24,10 @@ def get_invoice(db: Session, invoice_id: int):
     return db.query(Invoice).filter(Invoice.id == invoice_id).first()
 
 def get_invoices_by_user(db: Session, user_id: int):
-    return db.query(Invoice).filter(Invoice.owner_id == user_id).all()
+    invoices = db.query(Invoice).filter(Invoice.owner_id == user_id).all()
+    logger.log(logging.DEBUG, invoices)
+    print(invoices)
+    return invoices
 
 def get_invoices_by_user_within_period(db: Session, user_id: int, start_date: datetime, end_date: datetime):
     return db.query(Invoice).filter(Invoice.owner_id == user_id, Invoice.date_created>=start_date,

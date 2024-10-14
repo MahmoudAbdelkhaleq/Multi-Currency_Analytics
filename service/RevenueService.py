@@ -23,7 +23,7 @@ async def get_total_revenue_per_currency(db: Session, user_id: int):
 
 # average revenue related functions
 
-async def get_average_revenue_in_currency(db: Session, user_id, int, currency: Union[str, None] = 'USD'):
+async def get_average_revenue_in_currency(db: Session, user_id: int, currency: Union[str, None] = 'USD'):
     invoices = get_invoices_by_user(db, user_id)
     revenue_in_USD = sum([invoice.converted_amount for invoice in invoices])
     revenue_in_currency = await utils.get_amount_in_currency_from_usd(revenue_in_USD, currency)

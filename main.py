@@ -86,19 +86,19 @@ def read_invoices(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     invoices = InvoiceService.get_invoices(db = db, skip=skip, limit=limit)
     return invoices
 
-@app.get("/invoices/{invoice_id}", response_model=Invoice)
+@app.get("/invoice/{invoice_id}", response_model=Invoice)
 def read_invoice(invoice_id: int, db: Session = Depends(get_db)):
     db_invoice = InvoiceService.get_invoice(db = db, invoice_id=invoice_id)
     if db_invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return db_invoice
 
-@app.get("/invoices/{user_id}", response_model=Invoice)
+@app.get("/invoices/{user_id}", response_model=List[Invoice])
 def get_invoices_by_user(user_id: int, db: Session = Depends(get_db)):
-    db_invoice = InvoiceService.get_invoices_by_user(db = db, user_id=user_id)
-    if db_invoice is None:
+    db_invoices = InvoiceService.get_invoices_by_user(db = db, user_id=user_id)
+    if db_invoices is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
-    return db_invoice
+    return db_invoices
 
 @app.put("/invoices/", response_model=Invoice)
 async def update_invoice(invoice_id: int, invoice: InvoiceCreate, db: Session = Depends(get_db)):
