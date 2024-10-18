@@ -1,8 +1,11 @@
+from datetime import timedelta, datetime, timezone
+
 import strawberry
 from strawberry.fastapi import GraphQLRouter
-from typing import List, Union
+from typing import List, Union, Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, status, Form
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 import uvicorn
@@ -18,7 +21,7 @@ if current_directory not in sys.path:
     sys.path.append(current_directory)
 
 print("Current directory added to system path:", current_directory)
-from utils import utils
+from utils import api_conversions
 
 
 from database.database import get_db, engine, Base
@@ -32,12 +35,29 @@ from service import InvoiceService, UserService, RevenueService
 from graphQL.Query import Query as query
 from graphQL.Mutation import Mutation as mutation
 
+from models.Token import Token
 
 Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+@app.post("/token")
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)) -> Token:
+    user = UserService.authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = UserService.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
 
 # User CRUD
 
@@ -46,8 +66,19 @@ def create_user(user: UserCreate, db: Session = Depends(get_db))->User:
     db_user = UserService.get_user_by_email(db = db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    db_user = UserService.get_user_by_username(db = db, username=user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
     return UserService.create_user(db = db, user=user)
 
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(UserService.get_current_active_user)):
+    return current_user
+
+# @app.get("/users/me/invoices/")
+# async def read_invoices_me(current_user: User = Depends(UserService.get_current_active_user), db: Session = Depends(get_db)):
+#     invoices = await InvoiceService.get_invoices_by_user(db = db, user_id=current_user.id)
+#     return invoices
 
 @app.get("/users/", response_model=List[User])
 def read_users(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
@@ -64,7 +95,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db_user = UserService.delete_user(db = db, user_id=user_id)
     return db_user
 
-@app.get("/users/{user_id}", response_model=User)
+@app.get("/users/{user_id}", response_model=User, status_code=status.HTTP_200_OK)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = UserService.get_user(db = db, user_id=user_id)
     if db_user is None:
@@ -115,7 +146,7 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
 #exchange rate endpoint
 @app.get("/exchange_rate/{currency}")
 async def get_exchange_rate(currency: str):
-    exchange_rate = await utils.get_exchange_rate(currency)
+    exchange_rate = await api_conversions.get_exchange_rate(currency)
     return {"Currency": currency,
             "Standard Currency": 'USD',
             "Exchange Rate": exchange_rate}

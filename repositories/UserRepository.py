@@ -7,11 +7,14 @@ from database.database import SessionLocal, get_db, FastAPI
 from fastapi import Depends
 
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> User:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_email(db: Session, email: str) -> User:
     return db.query(User).filter(User.email == email).first()
+
+def get_user_by_username(db: Session, username: str) -> User:
+    return db.query(User).filter(User.username == username).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(User).offset(skip).limit(limit).all()
@@ -39,3 +42,15 @@ def delete_user(db: Session, user_id: int):
     db.delete(db_user)
     db.commit()
     return db_user
+
+class EnityNotFound(Exception):
+    pass
+
+def login_user(db: Session, username: str):
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise ValueError("User not found")
+        # raise EntityNotFound("User not found")
+    return user
+    
+
